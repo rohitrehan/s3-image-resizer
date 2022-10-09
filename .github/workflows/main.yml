@@ -16,7 +16,6 @@ jobs:
         with:
           node-version: '16.x'
       - run: npm install
-      - run: npm test
       - name: Zip Release
         uses: TheDoctor0/zip-release@0.6.2
         with:
