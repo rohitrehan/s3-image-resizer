@@ -19,4 +19,8 @@ jobs:
       - name: Zip Release
         uses: TheDoctor0/zip-release@0.6.2
         with:
-          exclusions: '*.git* /* .stack.yaml'
+          filename: 'image-handler.zip'
+          exclusions: '*.git* stack.yaml README.md'
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "image-handler.zip,stack.yaml"
