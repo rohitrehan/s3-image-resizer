@@ -22,14 +22,16 @@ exports.handler = function (event, context, callback) {
   const quality = parseInt(match[4], 10);
   const originalKey = match[5];
 
-  S3.getObject({ Bucket: BUCKET, Key: originalKey })
+  const fileKey = originalKey.split('.')
+  fileKey.splice(fruits.length-1, 1, 'png')
+
+  S3.getObject({ Bucket: BUCKET, Key: fileKey.join('.') })
     .promise()
     .then((data) =>
       Sharp(data.Body)
         .resize(width, height)
-        .png({
-          quality: quality,
-          progressive: true,
+        .webp({
+          quality: quality
         })
         .toBuffer()
     )
@@ -37,7 +39,7 @@ exports.handler = function (event, context, callback) {
       S3.putObject({
         Body: buffer,
         Bucket: BUCKET,
-        ContentType: "image/png",
+        ContentType: "image/webp",
         Key: key,
       }).promise()
     )
