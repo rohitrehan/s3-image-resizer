@@ -41,7 +41,11 @@ Resources:
     Type: 'AWS::S3::BucketPolicy'
     Properties:
       PolicyDocument:
-        Id: MyPolicy
+        Id: !Join
+          - ''
+          - - !Ref AWS::StackName
+            - '_'
+            - 'MyPolicy'
         Version: 2012-10-17
         Statement:
           - Sid: PublicReadForGetBucketObjects
@@ -54,6 +58,61 @@ Resources:
                 - !Ref S3Bucket
                 - /*
       Bucket: !Ref S3Bucket
+
+  S3CloudfrontCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        DefaultTTL: 86400
+        MaxTTL: 31536000
+        MinTTL: 1
+        Name: !Join
+          - ''
+          - - !Ref AWS::StackName
+            - '_'
+            - 'S3ImageHandlerCachePolicy'
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig:
+            CookieBehavior: none
+          EnableAcceptEncodingBrotli: false
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: whitelist
+            Headers:
+              - origin
+              - accept
+          QueryStringsConfig:
+            QueryStringBehavior: whitelist
+            QueryStrings:
+              - signature
+  S3Cloudfront:
+    Type: AWS::CloudFront::Distribution
+    Properties: 
+      DistributionConfig:
+        Enabled: true
+        DefaultCacheBehavior: 
+          AllowedMethods: 
+            - GET
+            - HEAD
+          CachePolicyId:
+            Ref: S3CloudfrontCachePolicy
+          Compress: true
+          TargetOriginId: !Join
+          - ''
+          - - !Ref AWS::StackName
+            - '_'
+            - 'ImageHandlerS3CloudfrontOrigin'
+          ViewerProtocolPolicy: redirect-to-https
+        HttpVersion: http2and3
+        Origins:
+          - DomainName: !Select [1, !Split ["//", !GetAtt S3Bucket.WebsiteURL]]
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only	
+            Id: !Join
+                - ''
+                - - !Ref AWS::StackName
+                  - '_'
+                  - 'ImageHandlerS3CloudfrontOrigin'
   LambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -68,8 +127,8 @@ Resources:
         Variables:
           BUCKET: !Ref bucketName
           URL: !GetAtt 
-            - S3Bucket
-            - WebsiteURL
+            - S3Cloudfront
+            - DomainName
           VIPS_DISC_THRESHOLD: 600m
       Runtime: nodejs16.x
   LambdaExecutionRole:
@@ -108,7 +167,11 @@ Resources:
     Type: AWS::ApiGatewayV2::Api
     Properties:
       ProtocolType: HTTP
-      Name: S3ImageHanlderApiGateway
+      Name: !Join
+          - ''
+          - - !Ref AWS::StackName
+            - '_'
+            - 'S3ImageHanlderApiGateway'
   ApiIntegration:
     Type: 'AWS::ApiGatewayV2::Integration'
     Properties:
@@ -125,6 +188,7 @@ Resources:
           - !GetAtt LambdaFunction.Arn
           - /invocations
       PayloadFormatVersion: '2.0'
+  
     
   ApiGatewayRootMethod:
     Type: AWS::ApiGatewayV2::Route
@@ -166,16 +230,8 @@ Resources:
           - '/*/*'
 
 Outputs:
-  WebsiteURL:
+  ImageBaseURL:
     Value: !GetAtt 
-      - S3Bucket
-      - WebsiteURL
-    Description: URL for website hosted on S3
-  S3BucketSecureURL:
-    Value: !Join 
-      - ''
-      - - 'https://'
-        - !GetAtt 
-          - S3Bucket
-          - DomainName
-    Description: Name of S3 bucket to hold website content
+      - S3Cloudfront
+      - DomainName
+    Description: URL to be used for images hosted on S3
