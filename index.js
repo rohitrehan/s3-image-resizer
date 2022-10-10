@@ -23,7 +23,7 @@ exports.handler = function (event, context, callback) {
   const originalKey = match[5];
 
   const fileKey = originalKey.split('.')
-  fileKey.splice(fruits.length-1, 1, 'png')
+  fileKey.splice(fileKey.length-1, 1, 'png')
 
   S3.getObject({ Bucket: BUCKET, Key: fileKey.join('.') })
     .promise()
