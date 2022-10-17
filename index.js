@@ -14,17 +14,17 @@ const ALLOWED_RESOLUTIONS = process.env.ALLOWED_RESOLUTIONS
 
 exports.handler = function (event, context, callback) {
   const key = event.queryStringParameters.key;
-  const match = key.match(/((\d+)x(\d+))\/(\d+)\/(.*)/);
+  const match = key.split('/');
 
-  const resolution = match[1];
-  const width = parseInt(match[2], 10);
-  const height = parseInt(match[3], 10);
+  const resolution = match[0].split('x');
+  const width = parseInt(resolution[0], 10);
+  const height = parseInt(resolution[1], 10);
 
   let quality = 100;
-  let originalKey = match[4];
-  if (match.length > 5) {
-    quality = parseInt(match[4], 10);
-    originalKey = match[5];
+  let originalKey = match[1];
+  if (match.length > 2) {
+    quality = parseInt(match[1], 10);
+    originalKey = match[2];
   }
 
   const fileKey = originalKey.split(".");

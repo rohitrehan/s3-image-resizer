@@ -19,7 +19,7 @@ jobs:
         uses: TheDoctor0/zip-release@0.6.2
         with:
           filename: 'image-handler.zip'
-          exclusions: '*.git* stack.yaml README.md'
+          exclusions: '*.git* stack.yaml README.md, test.js'
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "image-handler.zip,stack.yaml"
