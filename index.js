@@ -22,7 +22,7 @@ exports.handler = function (event, context, callback) {
 
   let quality = 100;
   let originalKey = match[4];
-  if (match.length > 4) {
+  if (match.length > 5) {
     quality = parseInt(match[4], 10);
     originalKey = match[5];
   }
