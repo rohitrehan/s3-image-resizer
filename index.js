@@ -30,17 +30,21 @@ exports.handler = function (event, context, callback) {
   const fileKey = originalKey.split(".");
   fileKey.splice(fileKey.length - 1, 1, "png");
 
-
-  const transparent = {r:0, b:0, g:0, a:0};
-
   S3.getObject({ Bucket: BUCKET, Key: fileKey.join(".") })
     .promise()
     .then((data) =>
       Sharp(data.Body)
-        .flatten()
-        .embed()
-        .background(transparent)
-        .resize(width, height)
+        .resize({
+          width: width,
+          height: height,
+          fit: "contain",
+          background: {
+            r: 0,
+            g: 0,
+            b: 0,
+            alpha: 0,
+          },
+        })
         .webp({
           quality: quality,
         })
