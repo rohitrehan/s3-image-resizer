@@ -19,19 +19,30 @@ exports.handler = function (event, context, callback) {
   const resolution = match[1];
   const width = parseInt(match[2], 10);
   const height = parseInt(match[3], 10);
-  const quality = parseInt(match[4], 10);
-  const originalKey = match[5];
 
-  const fileKey = originalKey.split('.')
-  fileKey.splice(fileKey.length-1, 1, 'png')
+  let quality = 100;
+  let originalKey = match[4];
+  if (match.length > 4) {
+    quality = parseInt(match[4], 10);
+    originalKey = match[5];
+  }
 
-  S3.getObject({ Bucket: BUCKET, Key: fileKey.join('.') })
+  const fileKey = originalKey.split(".");
+  fileKey.splice(fileKey.length - 1, 1, "png");
+
+
+  const transparent = {r:0, b:0, g:0, a:0};
+
+  S3.getObject({ Bucket: BUCKET, Key: fileKey.join(".") })
     .promise()
     .then((data) =>
       Sharp(data.Body)
+        .flatten()
+        .embed()
+        .background(transparent)
         .resize(width, height)
         .webp({
-          quality: quality
+          quality: quality,
         })
         .toBuffer()
     )
