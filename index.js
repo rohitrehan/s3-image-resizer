@@ -18,7 +18,7 @@ exports.handler = function (event, context, callback) {
 
   const resolution = match[0].split('x');
   const width = parseInt(resolution[0], 10);
-  const height = parseInt(resolution[1], 10);
+  const height = resolution.length > 1 ? parseInt(resolution[1], 10) : -1;
 
   let quality = 100;
   let originalKey = match[1];
@@ -32,12 +32,18 @@ exports.handler = function (event, context, callback) {
 
   S3.getObject({ Bucket: BUCKET, Key: fileKey.join(".") })
     .promise()
-    .then((data) =>
-      Sharp(data.Body)
-        .resize({
+    .then((data) => {
+      let temp = Sharp(data.Body)
+      if(height <= 0) {
+        temp = temp.resize({
+          fit: Sharp.fit.contain,
+          width: 800
+        })
+      } else {
+        temp = temp.resize({
           width: width,
           height: height,
-          fit: "contain",
+          fit: Sharp.fit.contain,
           background: {
             r: 0,
             g: 0,
@@ -45,11 +51,12 @@ exports.handler = function (event, context, callback) {
             alpha: 0,
           },
         })
-        .webp({
-          quality: quality,
-        })
-        .toBuffer()
-    )
+      }
+      return temp.webp({
+        quality: quality,
+      })
+      .toBuffer()
+    })
     .then((buffer) =>
       S3.putObject({
         Body: buffer,
