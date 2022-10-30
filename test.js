@@ -2,7 +2,7 @@
 
 const Sharp = require("sharp");
 
-  const key = "200/support.webp";
+  const key = "200x210/support.webp";
   const match = key.split('/');
 
   const resolution = match[0].split('x');
@@ -23,13 +23,13 @@ const Sharp = require("sharp");
   if(height <= 0) {
     temp = temp.resize({
       fit: Sharp.fit.contain,
-      width: 800
+      width: width
     })
   } else {
     temp = temp.resize({
       width: width,
       height: height,
-      fit: Sharp.fit.contain,
+      fit: "inside",
       background: {
         r: 0,
         g: 0,

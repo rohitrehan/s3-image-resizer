@@ -37,13 +37,13 @@ exports.handler = function (event, context, callback) {
       if(height <= 0) {
         temp = temp.resize({
           fit: Sharp.fit.contain,
-          width: 800
+          width: width
         })
       } else {
         temp = temp.resize({
           width: width,
           height: height,
-          fit: Sharp.fit.contain,
+          fit: Sharp.fit.inside,
           background: {
             r: 0,
             g: 0,
